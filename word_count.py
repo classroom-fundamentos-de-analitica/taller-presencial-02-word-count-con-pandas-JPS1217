@@ -3,66 +3,55 @@
 import glob
 
 import pandas as pd
+from pandas import DataFrame
 
 
-def load_input(input_directory):
-    """Load text files in 'input_directory/'"""
-    #
-    # Lea los archivos de texto en la carpeta input/ y almacene el contenido en
-    # un DataFrame de Pandas. Cada línea del archivo de texto debe ser una
-    # entrada en el DataFrame.
-    #
-
+def load_input(input_directory: str) -> DataFrame:
     filenames = glob.glob(input_directory + '/*.*')
     dataframes = [
-        pd.read_csv(filename, sep="\t", names=["text"]) for filename in filenames
+        pd.read_csv(filename, sep=';', index_col=None, names=['text'])
+        for
+        filename in filenames
     ]
     dataframe = pd.concat(dataframes).reset_index(drop=True)
     return dataframe
-    
 
-def clean_text(dataframe):
-    """Text cleaning"""
-    #
-    # Elimine la puntuación y convierta el texto a minúsculas.
-    #
+
+def clean_text(dataframe: DataFrame):
     dataframe = dataframe.copy()
-    dataframe['text'] = dataframe['text'].str.lower()
-    dataframe['text'] = dataframe['text'].str.replace(",", "").str.replace(".", "")
+    dataframe['text'] = dataframe['text'].replace(
+        r'[\.,\/#!$%\^&\*;:{}=\_`~(#)\[\]]',
+        '',
+        regex=True).apply(str.lower).apply(str.strip)
     return dataframe
 
 
-def count_words(dataframe):
-    """Word count"""
+def count_words(dataframe: DataFrame) -> DataFrame:
     dataframe = dataframe.copy()
-    dataframe['text'] = dataframe['text'].str.split()
+    dataframe['text'] = dataframe['text'].str.split(' ')
     dataframe = dataframe.explode('text').reset_index(drop=True)
     dataframe = dataframe.rename(columns={'text': 'word'})
     dataframe['count'] = 1
-
-    conteo = dataframe.groupby(['word'], as_index=False).agg(
+    dataframe = dataframe.groupby(['word']).agg(
         {
-            'count': sum
+            'count': 'sum'
         }
     )
-    return conteo 
+    return dataframe
 
 
-def save_output(dataframe, output_filename):
-    """Save output to a file."""
-    dataframe.to_csv(output_filename, index=False, sep=";", header=False)
+def save_output(dataframe: DataFrame, output_filename: str) -> None:
+    dataframe.to_csv(output_filename, sep='\t', header=False)
 
 
 #
 # Escriba la función job, la cual orquesta las funciones anteriores.
 #
 def run(input_directory, output_filename):
-    """Call all functions."""
     dataframe = load_input(input_directory)
     dataframe = clean_text(dataframe)
     dataframe = count_words(dataframe)
     save_output(dataframe, output_filename)
-
 
 
 if __name__ == "__main__":
@@ -70,4 +59,3 @@ if __name__ == "__main__":
         "input",
         "output.txt",
     )
-
