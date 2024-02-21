@@ -5,7 +5,6 @@ import glob
 import pandas as pd
 
 
-
 def load_input(input_directory):
     """Load text files in 'input_directory/'"""
     #
@@ -22,13 +21,15 @@ def load_input(input_directory):
     return dataframe
     
 
-
 def clean_text(dataframe):
+    """Text cleaning"""
+    #
+    # Elimine la puntuación y convierta el texto a minúsculas.
+    #
     dataframe = dataframe.copy()
     dataframe['text'] = dataframe['text'].str.lower()
     dataframe['text'] = dataframe['text'].str.replace(",", "").str.replace(".", "")
     return dataframe
-
 
 
 def count_words(dataframe):
@@ -45,7 +46,6 @@ def count_words(dataframe):
         }
     )
     return conteo 
-
 
 
 def save_output(dataframe, output_filename):
